@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react'
-import { SongInList, fetchCharts, rankThumbnails } from '../../App'
-import { SongId, Regions, ChartResults } from '../../api/Client'
+import { SongInList } from '../../App'
+import { SongId, Regions, ChartResults, ChartThumbnail } from '../../api/Client'
 
 interface ChartsPageProps {
     queue: SongId[]
     setQueue: React.Dispatch<React.SetStateAction<SongId[]>>
     region: Regions
+    fetchCharts: (region: Regions) => Promise<ChartResults>
+    rankThumbnails: (thumbnails: ChartThumbnail[]) => ChartThumbnail[]
 }
 
 export function ChartsPage(props: ChartsPageProps) {
     const [charts, setCharts] = useState<ChartResults>()
     useEffect(() => {
         async function a() {
-            let x = await fetchCharts(props.region)
+            let x = await props.fetchCharts(props.region)
             setCharts(x)
         }
         a()
@@ -34,7 +36,7 @@ export function ChartsPage(props: ChartsPageProps) {
                         return (
                             <div className='artist-in-list'>
                                 <img
-                                    src={rankThumbnails(e.thumbnails)[0].url}
+                                    src={props.rankThumbnails(e.thumbnails)[0].url}
                                     alt='thbnl'
                                     className='artist-thumbnail'
                                     loading='lazy'

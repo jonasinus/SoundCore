@@ -12,7 +12,6 @@ import {
     Stream,
     VideoStream
 } from '../../api/Client'
-import { PlayerProps } from '../Player'
 
 export default function SoundCore() {
     //LiFo principle (last track added plays next)
@@ -183,6 +182,12 @@ export default function SoundCore() {
             if (index > 0 && index < queue.length) newQueue = queue.splice(index, 1)
         }
         setQueue(newQueue)
+    }
+
+    interface PlayerProps {
+        next: () => void
+        currentlyPlaying: Stream | undefined
+        src: string
     }
 
     function Player(props: PlayerProps) {

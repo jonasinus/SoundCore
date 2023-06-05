@@ -1,15 +1,13 @@
 import { useState, useRef, useEffect } from 'react'
-import {
-    fetchSearchResults,
-    fetchExtendedSearchResults,
-    filterTitle,
-    truncateTitle
-} from '../../App'
 import { SongId, SearchResults, SearchTypes } from '../../api/Client'
 
 interface SearchPageProps {
     queue: SongId[]
     setQueue: React.Dispatch<React.SetStateAction<SongId[]>>
+    fetchSearchResults: (query: string, filter: SearchTypes) => Promise<SearchResults>
+    fetchExtendedSearchResults: (query: string) => Promise<SearchResults>
+    filterTitle: (s: string) => string
+    truncateTitle: (s: string) => string
 }
 
 export function SearchPage(props: SearchPageProps) {
@@ -28,8 +26,10 @@ export function SearchPage(props: SearchPageProps) {
         async function refetch() {
             if (inputRef.current && inputRef.current.value != '') {
                 let res
-                if (!extendedSearch) res = await fetchSearchResults(inputRef.current.value, filter)
-                if (extendedSearch) res = await fetchExtendedSearchResults(inputRef.current.value)
+                if (!extendedSearch)
+                    res = await props.fetchSearchResults(inputRef.current.value, filter)
+                if (extendedSearch)
+                    res = await props.fetchExtendedSearchResults(inputRef.current.value)
                 setSearchResults(res)
             }
         }
@@ -45,8 +45,8 @@ export function SearchPage(props: SearchPageProps) {
                     onClick={async () => {
                         let res
                         let query = inputRef && inputRef.current ? inputRef.current.value : ''
-                        if (!extendedSearch) res = await fetchSearchResults(query, filter)
-                        if (extendedSearch) res = await fetchExtendedSearchResults(query)
+                        if (!extendedSearch) res = await props.fetchSearchResults(query, filter)
+                        if (extendedSearch) res = await props.fetchExtendedSearchResults(query)
                         setSearchResults(res)
                     }}>
                     →
@@ -147,7 +147,9 @@ export function SearchPage(props: SearchPageProps) {
                                 }}>
                                 <img src={e.thumbnail} alt='img' />
                                 <div className='infos' title={e.title + ' | ' + e.uploaderName}>
-                                    <p className='title'>{truncateTitle(filterTitle(e.title))}</p>
+                                    <p className='title'>
+                                        {props.truncateTitle(props.filterTitle(e.title))}
+                                    </p>
                                     <p className='artist'>{e.uploaderName}</p>
                                     <p className='id'>{e.url.split('=')[1]}</p>
                                 </div>
