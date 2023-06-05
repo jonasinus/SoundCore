@@ -1,0 +1,443 @@
+html {
+    --inset: 0px 10px 20px 10px;
+}
+
+.nav {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    background-color: #000000be;
+    margin-bottom: 20px;
+    gap: 10px;
+
+    position: fixed;
+    bottom: 0;
+    width: calc(100% - 20px - 20px);
+    border-radius: 20px;
+    align-items: center;
+
+    height: 4.5rem;
+}
+
+.nav > a {
+    background-color: #ffffff00;
+    border: none;
+
+    display: flex;
+    justify-content: center;
+    justify-self: center;
+    align-items: center;
+
+    outline: none;
+
+    width: fit-content;
+
+    transition: 200ms;
+}
+
+.nav a.current {
+    border-bottom: 5px solid #646cff;
+}
+
+.nav > a:hover {
+    border-bottom: #646cfff0;
+}
+
+.nav img {
+    max-height: 30px;
+    max-width: 30px;
+}
+
+.nav img.scale-down {
+    max-height: 22px;
+    max-width: 22px;
+}
+
+.nav img.scale-down-light {
+    max-height: 24px;
+    max-width: 24px;
+}
+
+.player {
+    position: fixed;
+    left: 0;
+    bottom: calc(4.5rem + 20px);
+    width: 100vw;
+    transition: height 200ms, bottom 200ms;
+    --player-minimized-height: 4rem;
+    --player-maximized-height: 80vh;
+    max-height: var(--player-minimized-height);
+    height: var(--player-minimized-height);
+    gap: 5px;
+}
+
+.player.no-track-loaded {
+    bottom: calc(-1 * var(--player-maximized-height));
+}
+
+.player div.ctrls {
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+.player.swiped-up {
+    max-height: var(--player-maximized-height);
+    height: var(--player-maximized-height);
+    z-index: 2;
+}
+
+.player .expand {
+    height: calc(var(--player-maximized-height) - var(--player-minimized-height));
+    width: 100vw;
+    background-color: #00000080;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.player .expand img {
+    max-height: 500px;
+    object-fit: cover;
+    overflow: hidden;
+}
+
+.player .ctrls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player .ctrls button {
+    width: fit-content;
+    height: fit-content;
+}
+
+.player .ctrls img {
+    height: 30px;
+}
+
+.progress-bar-wrapper {
+    background-color: gray;
+}
+
+.progres {
+    height: 5px;
+    background-color: red;
+    display: flex;
+    justify-content: right;
+}
+
+.progres > .point {
+    width: 10px;
+    height: 10px;
+    border-radius: 10px;
+    background-color: red;
+    translate: 50% -25%;
+}
+
+/*page styles*/
+
+.page {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+
+    padding: 0px 10px 0px 5px;
+    padding-bottom: 160px;
+}
+
+.page .hero {
+    padding: 3rem 0 1rem 0;
+}
+
+/* charts page styles */
+
+.charts > .chart-list > .list {
+    display: grid;
+    grid-auto-rows: 1fr;
+    gap: 1rem;
+}
+
+.charts > .chart-artists > .list {
+    display: flex;
+    overflow: scroll;
+    gap: 1rem;
+    padding: 0 0 10px 0;
+}
+
+.charts button {
+    background-color: transparent;
+}
+
+.charts > .chart-artists > .list > div {
+    min-height: 200px;
+    min-width: 200px;
+    max-height: 200px;
+    max-width: 200px;
+    background-color: #4e0f65d1;
+    border: gray solid 2px;
+    display: flex;
+    border-radius: 20px;
+    position: relative;
+    align-items: flex-end;
+}
+
+.chart-artists > .list > div > img.artist-thumbnail {
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    border-radius: 18px;
+}
+
+.chart-artists > .list > div > .artist-info {
+    z-index: 1;
+    padding: 2rem 0 1rem 1rem;
+    width: 200px;
+    background-color: black;
+    background: linear-gradient(#00000000, #000000ff);
+    border-radius: 0 0 18px 18px;
+
+    font-weight: 500;
+}
+
+.charts > .chart-list > .list > div > img {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    border: gray solid 2px;
+}
+
+.charts .like-button {
+    width: fit-content;
+    height: fit-content;
+    padding: 5px;
+}
+
+.charts .like-button img {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+}
+
+.chart-list > .list > div {
+    display: grid;
+    grid-template-columns: 1fr 5fr 1fr;
+    gap: 1rem;
+    background-color: #00000040;
+    border-radius: 20px;
+    padding: 10px;
+    align-items: center;
+}
+
+.chart-list > .list > div > button.like-button {
+    justify-self: right;
+    margin-right: 1vw;
+}
+
+.chart-list > div div.infos {
+    display: flex;
+    flex-direction: column;
+    height: 4rem;
+}
+
+.chart-list > div div.infos > p {
+    justify-self: center;
+}
+
+.chart-list .subtitle {
+    color: #ffffff60;
+    font-weight: 400;
+}
+
+/* search page styles */
+.search > .search-widget {
+    display: flex;
+    margin-top: 3rem;
+    padding: 0.5rem;
+    width: 100%;
+    justify-content: space-between;
+    background-color: #00000020;
+    gap: 1rem;
+    border-radius: 1rem;
+    transition: 200ms;
+}
+
+.search > .search-widget:has(> input:focus) {
+    border: 2px solid #646cff;
+}
+
+.search > .search-widget > input {
+    width: 100%;
+    border-radius: 0.25rem;
+    border: none;
+    background-color: transparent;
+    outline: none;
+    font-size: large;
+    padding: 0 0.5rem;
+}
+
+.search > .search-widget > button {
+    background-color: transparent;
+    box-shadow: 0 0 4px 5px #00000010;
+    font-size: large;
+    transition: 200ms;
+}
+
+.search > .search-widget > button:hover {
+    box-shadow: 5px 5px 4px 5px #00000050;
+    translate: -5px -5px;
+}
+
+.search > .filters-wrapper {
+    margin: 0 -1rem;
+    padding: 0 1rem;
+    border-right: none;
+    border-left: none;
+
+    position: relative;
+    overflow: hidden;
+
+    --inset-borders: 4rem;
+}
+
+.search > .filters-wrapper > .filters {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 1rem 0;
+}
+
+.search > .filters-wrapper > .filters:before,
+.search > .filters-wrapper > .filters:after {
+    content: '';
+    position: absolute;
+    left: 6rem;
+    width: calc(100% - 12rem);
+    height: 2px;
+    background-color: gray;
+}
+
+.search > .filters-wrapper > .filters::before {
+    top: 0;
+}
+
+.search > .filters-wrapper > .filters:after {
+    bottom: 0;
+}
+
+.search > .filters-wrapper > .filters > .filterctrl {
+    display: flex;
+    justify-content: space-between;
+}
+
+.search > .filters-wrapper > .filters > .filterctrl > button {
+    background-color: transparent;
+    border: 2px solid gray;
+    padding: 5px 15px;
+    outline: none;
+}
+
+.search > .filters-wrapper > .filters > .filterctrl > button.collapsed {
+    border: 2px solid #646cff;
+}
+
+.search > .filters-wrapper > .filters > .main-filters {
+    display: flex;
+    width: 100%;
+    justify-content: space-between;
+}
+
+.search > .filters-wrapper > .filters > .main-filters > .filter {
+    display: flex;
+    padding: 0.5rem;
+    border: 2px solid gray;
+    border-radius: 0.5rem;
+    transition: 200ms;
+}
+
+.search > .filters-wrapper > .filters > .main-filters > .filter:has(input:checked) {
+    border: 2px solid #646cff;
+}
+
+.search > .filters-wrapper > .filters > .main-filters > .filter > input {
+    display: none;
+}
+
+.search .extended-search {
+    display: flex;
+    padding: 0.5rem;
+    border: 2px solid gray;
+    border-radius: 0.5rem;
+    transition: 200ms;
+    width: fit-content;
+}
+
+.search .extended-search:has(input:checked) {
+    border: 2px solid #646cff;
+}
+
+.search .extended-search > input {
+    display: none;
+}
+
+.search > .results {
+    display: grid;
+    grid-auto-rows: 1fr;
+    gap: 1rem;
+}
+
+.search > .results > div > img {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    border: gray solid 2px;
+}
+
+.search > .results .like-button {
+    width: fit-content;
+    height: fit-content;
+    padding: 5px;
+    background-color: transparent;
+}
+
+.search > .results .like-button img {
+    width: 30px;
+    height: 30px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: transparent;
+}
+
+.search > .results > div {
+    display: grid;
+    grid-template-columns: 1fr 5fr 1fr;
+    gap: 1rem;
+    background-color: #00000040;
+    border-radius: 20px;
+    padding: 10px;
+    align-items: center;
+}
+
+.search > .results > div > button.like-button {
+    justify-self: right;
+    margin-right: 1vw;
+}
+
+.search > .results > div div.infos {
+    display: flex;
+    flex-direction: column;
+    height: 4rem;
+}
+
+.chart-list > div div.infos > p {
+    justify-self: center;
+}
+
+.search > .results > div div.infos > p.artist {
+    color: #ffffff60;
+    font-weight: 400;
+}
