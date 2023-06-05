@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import { userConfig } from '../App'
 import { Chapter, Stream } from '../api/Client'
 
-export interface PlayerProps {
+interface PlayerProps {
     next: () => void
     currentlyPlaying: Stream | undefined
     src: string
