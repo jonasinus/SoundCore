@@ -10,78 +10,58 @@ import {
     SearchTypes,
     SongId,
     Stream,
-    VideoStream
+    VideoStream,
+    emptyStream
 } from '../../api/Client'
 
-export default function SoundCore() {
-    //LiFo principle (last track added plays next)
-    const [queue, setQueue] = useState<SongId[]>([])
-    const [queueLength, setQueueLength] = useState(queue.length)
-    const [currentlyPlaying, setCurrentlyPlaying] = useState<Stream>()
-    const [nextSongData, setNextSongData] = useState<Stream>()
-    const [src, setSrc] = useState('')
+type CurrentStream = Stream & {
+    id: string
+}
 
-    function getNextSongId(): string {
-        if (queue.length >= 1) {
-            let c = queue[0]
-            setQueue(queue.slice(queue.length - 1))
-            return c
-        } else if (!userConfig.playOn) {
-            alert('track ended')
-            return 'playOnIsOff'
-        } else if (!currentlyPlaying || currentlyPlaying.relatedStreams.length == 0) {
-            alert('no fitting stream could be found')
-            return 'noStreamFound'
-        } else {
-            let filteredRelatedStreams = [...currentlyPlaying.relatedStreams].filter(
-                (rs) => rs.type == 'stream'
-            )
-            if (filteredRelatedStreams.length == 0) {
-                alert('no fitting stream could be found')
-                return 'noStreamsRecommended'
-            } else {
-                return filteredRelatedStreams[0].url.split('=')[1]
-            }
+export default function SoundCore() {
+    const [queue, setQueue] = useState<SongId[]>([])
+    const [queueIndex, setQueueIndex] = useState(-1)
+    const [queueLength, setQueueLength] = useState(queue.length)
+    const [currentlyPlaying, setCurrentlyPlaying] = useState<CurrentStream>()
+    const [nextSongData, setNextSongData] = useState<CurrentStream>()
+    const [src, setSrc] = useState('')
+    const [isLoading, setLoading] = useState(false)
+
+    function playNextSong() {
+        if (nextSongData) {
+            setCurrentlyPlaying(nextSongData)
+            setQueueIndex(queueIndex + 1)
         }
     }
 
     useEffect(() => {
-        console.log('queue changed: ', { queue, queueLength })
-        if (queue.length === 1 && queueLength === 0) {
-            //first song added to the queue
-        } else if (queue.length === 0 && queueLength > 0) {
-            //all songs from queue have been played
-        } else if (queue.length === 0 && queueLength === 0) {
-            //initial load of queue
-        } else {
-            //one song got added to the queue
+        if (queue[queueIndex + 1]) playAsNextSong(queue[queueIndex + 1])
+        else console.log('reaching end of queue after this song')
+    }, [queueIndex])
+
+    function playLastSong() {
+        if (queueIndex >= 1) {
         }
-        setQueueLength(queue.length)
-    }, [queue])
+    }
+
+    async function playAsNextSong(id: SongId) {
+        let res = await fetchStream(id)
+        setNextSongData({ ...res, id: id })
+    }
 
     useEffect(() => {
-        console.log('currentplaying changed: ', currentlyPlaying)
-
-        let newSrc = rankAudioStreams(currentlyPlaying?.audioStreams || [])
-        if (newSrc == src || newSrc == 'noAudioStreamsAvailable') setSrc('')
-        if (currentlyPlaying) setSrc(rankAudioStreams(currentlyPlaying.audioStreams))
-        else setSrc('noSource')
-    }, [currentlyPlaying])
-
-    useEffect(() => {
-        console.log('src changed:', src)
-    }, [src])
-
-    async function playnextSong() {
-        if (queue.length === 0) {
-            setCurrentlyPlaying(undefined)
+        if (!currentlyPlaying) {
+            if (!nextSongData) {
+                resumePlayback()
+            } else {
+                setCurrentlyPlaying(nextSongData)
+            }
         }
-        console.log('playing next song in queue: ' + queue[0])
-        let songId = queue[0]
-        let newQueue = queue.slice(1)
-        let streamData = await fetchStream(songId)
-        setCurrentlyPlaying(streamData)
-        setQueue(newQueue)
+    }, [])
+
+    function resumePlayback() {
+        let resumeObj = JSON.parse(localStorage.getItem('currentlyPlaying') || '{}')
+        console.log('resuming', resumeObj)
     }
 
     function rankAudioStreams(streams: AudioStream[]): string {
@@ -115,8 +95,7 @@ export default function SoundCore() {
         return sortedStreams[0].url
     }
 
-    const searchPath = (query: string, filter: SearchTypes) =>
-        `/search?filter=music_${filter}&q=${query}`
+    const searchPath = (query: string, filter: SearchTypes) => `/search?filter=music_${filter}&q=${query}`
     const extendedSearchPath = (query: string) => `/search?filter=all&q=${query}`
 
     const chartPath = (region: Regions) => `/charts?code=${region}&params=`
@@ -186,7 +165,7 @@ export default function SoundCore() {
 
     interface PlayerProps {
         next: () => void
-        currentlyPlaying: Stream | undefined
+        currentlyPlaying: CurrentStream | undefined
         src: string
     }
 
@@ -199,40 +178,65 @@ export default function SoundCore() {
         const loopRef = useRef<{ position: number; duration: number } | null>(null) // Store loop position and duration
 
         const [isSwipedUp, setIsSwipedUp] = useState(true)
-        const [startY, setStartY] = useState(0)
-        const [offsetY, setOffsetY] = useState(0)
+        //const [startY, setStartY] = useState(0)
+        //const [offsetY, setOffsetY] = useState(0)
         const playerRef = useRef<HTMLDivElement>(null)
+
+        const [fullLoop, setFullLoop] = useState(false)
 
         const [currentChapter, setCurrentChapter] = useState<Chapter>()
 
-        const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
-            const touch = event.touches[0]
-            setStartY(touch.pageY)
-        }
+        //const handleTouchStart = (event: React.TouchEvent<HTMLDivElement>) => {
+        //    const touch = event.touches[0]
+        //    setStartY(touch.pageY)
+        //}
 
-        const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
-            const touch = event.touches[0]
-            const currentY = touch.pageY
-            const delta = currentY - startY
+        //const handleTouchMove = (event: React.TouchEvent<HTMLDivElement>) => {
+        //    const touch = event.touches[0]
+        //    const currentY = touch.pageY
+        //    const delta = currentY - startY
+        //
+        //    setOffsetY(delta)
+        //}
 
-            setOffsetY(delta)
-        }
+        //const handleTouchEnd = () => {
+        //    if (offsetY < -50) {
+        //        setIsSwipedUp(true)
+        //    } else {
+        //        setIsSwipedUp(false)
+        //    }
+        //    setOffsetY(0)
+        //}
 
-        const handleTouchEnd = () => {
-            if (offsetY < -50) {
-                setIsSwipedUp(true)
-            } else {
-                setIsSwipedUp(false)
+        useEffect(() => {
+            const handleKeyDown = (event: KeyboardEvent) => {
+                if (event.key === 'MediaTrackNext' || event.keyCode == 176) {
+                    // Keyboard media key or Bluetooth headphones shortcut for skipping to the next track
+                    props.next()
+                }
             }
-            setOffsetY(0)
-        }
+
+            document.addEventListener('keydown', handleKeyDown)
+
+            const handleMediaSessionNext = () => {
+                props.next()
+            }
+
+            // Check if the mediaSession API is supported by the browser
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('nexttrack', handleMediaSessionNext)
+            }
+
+            return () => {
+                if ('mediaSession' in navigator) {
+                    navigator.mediaSession.setActionHandler('nexttrack', null)
+                }
+                document.removeEventListener('keydown', handleKeyDown)
+            }
+        }, [])
 
         function timeloop(position: number, duration: number) {
-            console.log(
-                `requesting loop from ${position}s for ${duration * 1000}ms. audioTrack is at ${
-                    audioElement.current?.currentTime
-                }`
-            )
+            console.log(`requesting loop from ${position}s for ${duration * 1000}ms. audioTrack is at ${audioElement.current?.currentTime}`)
             // Check if audio element reference is available
             if (!audioElement.current) {
                 console.error('Audio element reference not available')
@@ -286,7 +290,7 @@ export default function SoundCore() {
                 audioElement.current.addEventListener('timeupdate', handleTimeUpdate)
             }
 
-            console.log('isLooping updated: ', isLooped)
+            console.log('isLooped updated: ', isLooped)
 
             return () => {
                 if (audioElement.current) {
@@ -300,16 +304,28 @@ export default function SoundCore() {
             const currentTime = audioElement.currentTime
             setProgres(audioElement.currentTime)
             setCurrentChapter(getChapter(currentTime))
+            localStorage.setItem(
+                'currentlyPlaying',
+                JSON.stringify({
+                    title: props.currentlyPlaying?.title,
+                    src: props.src,
+                    thumbnails: props.currentlyPlaying?.thumbnailUrl,
+                    audioStreams: props.currentlyPlaying?.audioStreams,
+                    id: props.currentlyPlaying?.id,
+                    looped: isLooped,
+                    loopRef: loopRef,
+                    position: audioElement.currentTime
+                })
+            )
             if (currentTime >= audioElement.duration - 1) {
-                alert('song has ended!')
-                props.next()
+                if (!fullLoop) setTimeout(() => props.next(), 500)
+                else audioElement.currentTime = 0
             }
         }
 
         const handleSeekTo = (event: React.MouseEvent) => {
             const x = event.clientX
-            let toSecond =
-                (x / event.currentTarget.clientWidth) * (audioElement.current?.duration || 1)
+            let toSecond = (x / event.currentTarget.clientWidth) * (audioElement.current?.duration || 1)
             audioElement.current!.currentTime = toSecond
         }
 
@@ -331,99 +347,108 @@ export default function SoundCore() {
         return (
             <div
                 className={`player ${isSwipedUp ? 'swiped-up' : ''} ${
-                    audioElement.current &&
-                    audioElement.current.src &&
-                    audioElement.current.src !== ''
+                    audioElement.current && audioElement.current.src && audioElement.current.currentSrc !== '' && audioElement.current.currentSrc != undefined
                         ? 'track-loaded'
                         : 'no-track-loaded'
                 }`}
-                //style={{ bottom: isSwipedUp ? 'calc(90vh - 1px)' : 0 }}
-                ref={playerRef}
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}>
-                {true ? (
-                    <audio
-                        controls
-                        onTimeUpdate={handleProgress}
-                        ref={audioElement}
-                        hidden
-                        src={props.src}
-                        onCanPlay={(e) => {
-                            if (userConfig.autoStart) {
-                                e.currentTarget.play()
-                                setPlaying(true)
-                            }
-                            return true
-                        }}></audio>
-                ) : (
-                    <video controls onTimeUpdate={handleProgress} hidden>
-                        <source src={props.src} type='video/mp4'></source>
-                    </video>
-                )}
-                <div className='progress-bar-wrapper' onClick={(e) => handleSeekTo(e)}>
-                    <div
-                        className='progres'
-                        style={{
-                            width: `calc(${
-                                (progres / (audioElement.current?.duration || 1)) * 100
-                            }%)`
-                        }}>
-                        <div className='point'></div>
-                    </div>
-                </div>
-                <div className='ctrls'>
-                    <button onClick={() => setIsSwipedUp(!isSwipedUp)}>
-                        {isSwipedUp ? '↓' : '↑'}
-                    </button>
+                data-stream-obj={JSON.stringify(props.currentlyPlaying)}
+                data-src={props.src}
+                ref={playerRef}>
+                <audio
+                    controls
+                    onTimeUpdate={handleProgress}
+                    ref={audioElement}
+                    hidden
+                    src={props.src}
+                    onCanPlay={(e) => {
+                        if (userConfig.autoStart) {
+                            e.currentTarget.play()
+                            setPlaying(true)
+                        }
+                        return true
+                    }}></audio>
+                <h2 className='back' onClick={() => setIsSwipedUp(!isSwipedUp)}>
+                    ———
+                </h2>
+                <div className='minimal'>
                     <button>&lt;</button>
-                    <button
-                        onClick={() => {
-                            if (audioElement.current) {
-                                audioElement.current.currentTime -= 5
-                            }
-                        }}>
-                        <img src='./5sBackward.svg' alt='' />
+                    <button onClick={() => setPlaying(!playing)}>
+                        {playing ? <img src='./pause.svg' alt='pause' /> : <img src='./play.svg' alt='play' />}
                     </button>
-                    <button
-                        type='button'
-                        onClick={() => {
-                            playing ? audioElement.current?.pause() : audioElement.current?.play()
-                            setPlaying(!playing)
-                        }}>
-                        {playing ? 'pause' : 'play'}
-                    </button>
-                    <button
-                        onClick={() => {
-                            if (audioElement.current) {
-                                audioElement.current.currentTime += 5
-                            }
-                        }}>
-                        <img src='./5sForward.svg' alt='' />
-                    </button>
-                    <button onClick={props.next}>&gt;</button>
-                    <button>…</button>
+                    <button>&gt;</button>
                 </div>
-                <div className='expand' onMouseOver={() => setIsSwipedUp(true)}>
+                <div className='expand'>
                     <div className='img-container'>
-                        <img
-                            loading='lazy'
-                            src={props.currentlyPlaying?.thumbnailUrl}
-                            alt='cover'
-                        />
+                        <img loading='lazy' src={props.currentlyPlaying?.thumbnailUrl} alt='cover' className='cover' />
                     </div>
-                    <div className='infos'>
-                        <p className='title'>title: {props.currentlyPlaying?.title}</p>
-                        <p>
-                            played: {progres} of {audioElement.current?.duration} seconds
-                        </p>
-                        <p className='chapter'>chapter: {currentChapter?.title}</p>
+                    <div className='infos' title={props.currentlyPlaying?.title + ' by ' + props.currentlyPlaying?.uploader + ', chapter: ' + currentChapter}>
+                        <p className='title'>{props.currentlyPlaying?.title}</p>
+                        <p className='artist'>{props.currentlyPlaying?.uploader}</p>
                     </div>
                     <div className='ctrls'>
+                        <div className='vertical-bar'>
+                            <button
+                                className='seek'
+                                onClick={() => {
+                                    if (audioElement.current) {
+                                        audioElement.current.currentTime -= 5
+                                    }
+                                }}>
+                                <img src='./5sBackward.svg' alt='' />
+                            </button>
+                            <button className={'loop ' + isLooped ? 'active' : ''} onClick={() => setFullLoop(!fullLoop)}>
+                                loop
+                            </button>
+                        </div>
+                        <div className='vertical-bar'>
+                            <button className='skip'>
+                                <img src='./skipPrevious.svg' alt='<' />
+                            </button>
+                        </div>
+
+                        <div className='vertical-bar'>
+                            <button
+                                type='button'
+                                className='play'
+                                onClick={() => {
+                                    playing ? audioElement.current?.pause() : audioElement.current?.play()
+                                    setPlaying(!playing)
+                                }}>
+                                {playing ? <img src='./pause.svg' alt='pause' /> : <img src='./play.svg' alt='play' />}
+                            </button>
+                        </div>
+                        <div className='vertical-bar'>
+                            <button onClick={props.next} className='skip'>
+                                <img src='./skipNext.svg' alt='>' />
+                            </button>
+                        </div>
+
+                        <div className='vertical-bar'>
+                            <button
+                                className='seek'
+                                onClick={() => {
+                                    if (audioElement.current) {
+                                        audioElement.current.currentTime += 5
+                                    }
+                                }}>
+                                <img src='./5sForward.svg' alt='' />
+                            </button>
+                            <button className='shuffle'>shuffle</button>
+                        </div>
+                    </div>
+                    <div className='progress-bar-wrapper' onClick={(e) => handleSeekTo(e)}>
+                        <div
+                            className='progres'
+                            style={{
+                                width: `calc(${(progres / (audioElement.current?.duration || 1)) * 100}%)`
+                            }}>
+                            <div className='point'></div>
+                        </div>
+                    </div>
+                    <div className='ctrls' style={{ display: 'none' }}>
                         <button
                             onClick={() => {
-                                if (audioElement.current)
-                                    timeloop(audioElement.current.currentTime, 5)
+                                if (audioElement.current) timeloop(audioElement.current.currentTime, 5)
                             }}>
                             loop 5s
                         </button>
@@ -443,23 +468,74 @@ export default function SoundCore() {
         fetchExtendedSearchResults,
         fetchCharts,
         fetchStream,
-        playnextSong,
-        API_URL,
-        API_2_URL,
+        playNextSong,
+        playAsNextSong,
+        playLastSong,
+        setSrc,
+        setCurrentlyPlaying,
+        setQueue,
+        setNextSongData,
+        setLoading,
+        rankVideoStreams,
         rankThumbnails,
-        getNextSongId,
+        //getNextSongId,
         linkToSong,
         chartPath,
         searchPath,
-        currentlyPlaying,
-        setCurrentlyPlaying,
-        queue,
-        setQueue,
-        src,
-        setSrc,
-        nextSongData,
-        setNextSongData,
         Player,
-        userConfig
+        currentlyPlaying,
+        isLoading,
+        queue,
+        src,
+        nextSongData,
+        userConfig,
+        API_URL,
+        API_2_URL
     }
+}
+
+export function PlaylistEngine() {
+    function createPlaylist(name: string) {}
+
+    function deletePlaylist(name: string) {}
+
+    function addToPlaylist(playlistName: string, item: Stream) {}
+
+    function removeFromPlaylist(playlistName: string, item: Stream) {}
+
+    function exportPlaylist(name: string) {}
+
+    function importPlaylist(s: string) {}
+
+    function getAllPlaylists() {
+        let storage = { ...localStorage }
+        let playlists: Playlist[] = []
+        for (let i = 0; i < Object.keys(storage).length; i++) {
+            let key = Object.keys(storage)[i]
+            let val = storage[key]
+
+            if (key.startsWith('playlist')) playlists.push(val)
+        }
+        return playlists
+    }
+
+    return {
+        createPlaylist,
+        deletePlaylist,
+        addToPlaylist,
+        removeFromPlaylist,
+        importPlaylist,
+        exportPlaylist,
+        getAllPlaylists
+    }
+}
+
+export type Playlist = {
+    createdAt: number
+    lastEdited: number
+    items: Stream[]
+    name: string
+    thumbnailUrl: string
+    playlistType: string
+    creatorName: string
 }

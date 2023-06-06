@@ -1,21 +1,33 @@
 html {
     --inset: 0px 10px 20px 10px;
+    --max-width: 500px;
+}
+
+body:has(.player.swiped-up) {
+    overflow-y: hidden;
 }
 
 .nav {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     background-color: #000000be;
-    margin-bottom: 20px;
     gap: 10px;
 
     position: fixed;
-    bottom: 0;
-    width: calc(100% - 20px - 20px);
+    bottom: 30px;
+    width: min(calc(100% - 1rem - 1rem), var(--max-width));
     border-radius: 20px;
     align-items: center;
 
     height: 4.5rem;
+
+    z-index: 2;
+
+    margin: auto;
+}
+
+.player:not(.swiped-up).track-loaded + .nav {
+    border-radius: 0 0 20px 20px;
 }
 
 .nav > a {
@@ -58,66 +70,161 @@ html {
 }
 
 .player {
+    transition: all 500ms;
     position: fixed;
-    left: 0;
-    bottom: calc(4.5rem + 20px);
-    width: 100vw;
-    transition: height 200ms, bottom 200ms;
-    --player-minimized-height: 4rem;
-    --player-maximized-height: 80vh;
-    max-height: var(--player-minimized-height);
-    height: var(--player-minimized-height);
-    gap: 5px;
+    bottom: calc(30px + 4.5rem);
+    width: min(calc(100% - 2rem), var(--max-width));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: rgb(29, 66, 135);
+    background: radial-gradient(circle at bottom right, rgba(37, 46, 62, 0.544), rgb(20, 113, 85)),
+        radial-gradient(circle at top left, rgb(160, 84, 34), rgb(138, 74, 37));
+    box-shadow: 0 0 25px 2px #00000020;
+    padding: 0 0 0.5rem 0;
+    border-radius: 1rem 1rem 0 0;
+    gap: 10px;
+}
+
+.player .minimal {
+    display: flex;
+    width: 100%;
+    justify-content: center;
 }
 
 .player.no-track-loaded {
-    bottom: calc(-1 * var(--player-maximized-height));
-}
-
-.player div.ctrls {
-    width: 100%;
-    display: flex;
-    justify-content: space-between;
-}
-
-.player.swiped-up {
-    max-height: var(--player-maximized-height);
-    height: var(--player-maximized-height);
-    z-index: 2;
+    display: none;
 }
 
 .player .expand {
-    height: calc(var(--player-maximized-height) - var(--player-minimized-height));
-    width: 100vw;
-    background-color: #00000080;
+    width: 100%;
+    padding: 0 1rem;
+}
+
+.player > .expand > .progress-bar-wrapper {
+    width: 90%;
+}
+
+.player:not(.swiped-up) > .expand > .ctrls,
+.player:not(.swiped-up) > .expand > .img-container {
+    display: none;
+}
+
+.player.swiped-up > .minimal {
+    display: none;
+}
+
+.player.swiped-up {
+    position: fixed;
+    background-attachment: fixed;
+    height: 100vh;
+    width: min(100vw, calc(var(--max-width) + 2rem));
+    bottom: 0;
+    left: 0;
+    padding-top: 5rem;
+    z-index: 2;
+    background-color: #000000;
+}
+
+.player button.loop.active {
+    background-color: #646cff;
+}
+
+.player audio {
+    display: none;
+}
+
+.player.swiped-up > .expand {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    max-width: 100%;
+    padding: 1rem;
+    border-radius: 1rem 1rem 0 0;
+    background-color: rgba(167, 72, 72, 0.316);
+    height: 100%;
+}
+
+.player.swiped-up > .expand img:not(.cover) {
+    width: 30px;
+    height: 30px;
+}
+
+.player.swiped-up > .expand .img-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 40vh;
+    max-height: 40vh;
+    width: min(calc(100vw - 40px), 100%);
+    overflow: hidden;
+    margin: 0 auto;
+    border-radius: 1rem;
+}
+
+.player.swiped-up > .expand > .img-container > img.cover {
+    height: 100%;
+    margin: auto;
+    padding-top: 0.25rem;
+}
+
+.player.swiped-up > .expand > .infos {
     display: flex;
     flex-direction: column;
     align-items: center;
 }
 
-.player .expand img {
-    max-height: 500px;
-    object-fit: cover;
-    overflow: hidden;
+.player.swiped-up > .expand > .infos > .title {
+    font-size: 1.5rem;
+    font-weight: 600;
 }
 
-.player .ctrls {
+.player.swiped-up > .expand > .infos > .artist {
+    font-weight: 400;
+    color: rgb(171, 171, 171);
+}
+
+.player.swiped-up button {
+    height: 50px;
+    width: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.player.swiped-up button.play {
+    padding: 40px;
+    border-radius: 40px;
+}
+
+.player.swiped-up > .expand > .ctrls > .vertical-bar > button.play img {
+    height: 45px;
+    width: 45px;
+}
+
+.player > .expand > .ctrls {
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-evenly;
+    width: 100%;
+    height: 10rem;
 }
 
-.player .ctrls button {
-    width: fit-content;
-    height: fit-content;
+.player > .expand > .ctrls > .vertical-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
 }
 
-.player .ctrls img {
-    height: 30px;
+.player > .expand > .img-container > img {
+    object-fit: cover;
+    max-width: 100vw;
 }
 
 .progress-bar-wrapper {
     background-color: gray;
+    width: 90%;
+    border-radius: 1rem;
 }
 
 .progres {
@@ -142,8 +249,12 @@ html {
     flex-direction: column;
     gap: 2rem;
 
-    padding: 0px 10px 0px 5px;
+    padding: 0px 10px 0px 10px;
     padding-bottom: 160px;
+}
+
+body:has(.player.track-loaded) .page {
+    padding-bottom: 350px;
 }
 
 .page .hero {

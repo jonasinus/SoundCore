@@ -1,6 +1,5 @@
 import './App.css'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
-import Player from './Components/Player'
 import { SearchPage } from './Routes/search'
 import PlaylistsPage from './Routes/playlists'
 import AccountPage from './Routes/account'
@@ -27,10 +26,11 @@ export const userConfig = {
 
 export default function App() {
     const soundCore = SoundCore()
+
     return (
         <BrowserRouter>
-            <TopBar />
-            <button onClick={soundCore.playnextSong}>click me</button>
+            <TopBar soundCore={soundCore} />
+            {/*<button onClick={soundCore.playnextSong}>click me</button>*/}
             <Routes>
                 <Route
                     path='/search'
@@ -56,26 +56,21 @@ export default function App() {
                         />
                     }
                 />
-                <Route
-                    path='/playlists'
-                    element={
-                        <PlaylistsPage queue={soundCore.queue} setQueue={soundCore.setQueue} />
-                    }
-                />
+                <Route path='/playlists' element={<PlaylistsPage queue={soundCore.queue} setQueue={soundCore.setQueue} />} />
                 <Route path='/account' element={<AccountPage />} />
             </Routes>
-            <soundCore.Player
-                currentlyPlaying={soundCore.currentlyPlaying}
-                next={soundCore.playnextSong}
-                src={soundCore.src}
-            />
+            <soundCore.Player currentlyPlaying={soundCore.currentlyPlaying} next={() => {}} src={soundCore.src} />
             <Nav />
         </BrowserRouter>
     )
 }
 
-export function TopBar() {
-    return <div className='top-bar'></div>
+interface TopBarProps {
+    soundCore: ReturnType<typeof SoundCore>
+}
+
+export function TopBar(props: TopBarProps) {
+    return <div className='top-bar'>{props.soundCore.isLoading ? 'loading player...' : ''}</div>
 }
 
 interface SongInListProps {
@@ -99,22 +94,13 @@ export function SongInList(props: SongInListProps) {
             }}>
             <img loading='lazy' src={props.thumbnailUrl} alt='' className='icon' />
             <div className='infos'>
-                <p className='title'>
-                    {SoundCore().truncateTitle(SoundCore().filterTitle(props.title))}
-                </p>
-                <p
-                    className='subtitle'
-                    onClick={() => console.log('goto artist[' + props.artistId + ']')}>
+                <p className='title'>{SoundCore().truncateTitle(SoundCore().filterTitle(props.title))}</p>
+                <p className='subtitle' onClick={() => console.log('goto artist[' + props.artistId + ']')}>
                     {props.artist}
                 </p>
             </div>
             <button type='button' className='like-button'>
-                <img
-                    loading='lazy'
-                    src='./heart.svg'
-                    alt='fav'
-                    className={props.liked ? 'filled' : ''}
-                />
+                <img loading='lazy' src='./heart.svg' alt='fav' className={props.liked ? 'filled' : ''} />
             </button>
         </div>
     )

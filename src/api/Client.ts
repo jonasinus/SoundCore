@@ -5,13 +5,15 @@ export type SearchResults = {
     items: SeachResultItem[]
 }
 
-export type SeachResultItem = {
+export type SeachResultItem = SearchResultPlaylist | SearchResultStream
+
+export type SearchResultStream = {
     duration: number
     isShort: boolean
     shortDescription: string | null
     thumbnail: string
     title: string
-    type: string
+    type: SearchResultItemTypes
     uploaded: number
     uploadedDate: number | null
     uploaderAvatar: string | null
@@ -21,6 +23,20 @@ export type SeachResultItem = {
     url: string
     views: number
 }
+
+export type SearchResultPlaylist = {
+    name: string
+    playlistType: string
+    thumbnail: string
+    type: SearchResultItemTypes
+    uploaderName: string
+    uploaderUrl: string | null
+    uploaderVerified: boolean
+    url: string
+    videos: number
+}
+
+export type SearchResultItemTypes = 'stream' | 'playlist' | 'channel'
 
 export type ChartResults = {
     options: {
@@ -54,7 +70,7 @@ export type ChartThumbnail = {
 export type Stream = {
     audioStreams: AudioStream[]
     category: string
-    chapters: []
+    chapters: Chapter[]
     dash: null | string
     description: string
     dislikes: number
@@ -63,10 +79,10 @@ export type Stream = {
     lbryId: null | number
     likes: number
     livestream: boolean
-    previewFrames: []
+    previewFrames: any[]
     proxyUrl: string
     relatedStreams: RealtedStream[]
-    subtitles: []
+    subtitles: any[]
     thumbnailUrl: string
     title: string
     uploadDate: string
@@ -75,8 +91,8 @@ export type Stream = {
     uploaderSubscriberCount: number
     uploaderUrl: string
     uploaderVerified: boolean
-    videoStreams: []
-    views: string
+    videoStreams: VideoStream[]
+    views: number
 }
 
 export type RealtedStream = {
@@ -134,3 +150,31 @@ export type SearchTypes = 'songs' | 'albums' | 'artists' | 'playlists'
 export type Regions = 'US' | 'DE' | 'GB' | 'CA'
 
 export type SongId = string
+
+export const emptyStream = {
+    audioStreams: [],
+    category: '',
+    chapters: [],
+    dash: null,
+    description: '',
+    dislikes: 0,
+    duration: 0,
+    hls: '',
+    lbryId: null,
+    likes: 0,
+    livestream: false,
+    previewFrames: [],
+    proxyUrl: '',
+    relatedStreams: [],
+    subtitles: [],
+    thumbnailUrl: '',
+    title: 'no song selected',
+    uploadDate: '',
+    uploader: 'browse or search a song or playlist to be played',
+    uploaderAvatar: '',
+    uploaderSubscriberCount: 0,
+    uploaderUrl: '',
+    uploaderVerified: true,
+    videoStreams: [],
+    views: 0
+}

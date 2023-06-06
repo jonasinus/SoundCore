@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
-import { SongId, SearchResults, SearchTypes } from '../../api/Client'
+import { SongId, SearchResults, SearchTypes, SearchResultPlaylist, SearchResultStream } from '../../api/Client'
+import { Link } from 'react-router-dom'
 
 interface SearchPageProps {
     queue: SongId[]
@@ -26,22 +27,29 @@ export function SearchPage(props: SearchPageProps) {
         async function refetch() {
             if (inputRef.current && inputRef.current.value != '') {
                 let res
-                if (!extendedSearch)
-                    res = await props.fetchSearchResults(inputRef.current.value, filter)
-                if (extendedSearch)
-                    res = await props.fetchExtendedSearchResults(inputRef.current.value)
+                if (!extendedSearch) res = await props.fetchSearchResults(inputRef.current.value, filter)
+                if (extendedSearch) res = await props.fetchExtendedSearchResults(inputRef.current.value)
                 setSearchResults(res)
             }
         }
         refetch()
     }, [filter])
 
+    function isSearchResultStream(item: any): item is SearchResultStream {
+        return item.type === 'stream'
+    }
+
+    // Type guard for SearchResultPlaylist
+    function isSearchResultPlaylist(item: any): item is SearchResultPlaylist {
+        return item.type === 'playlist'
+    }
+
     return (
         <div className='page search'>
             <div className='search-widget'>
                 <input type='text' placeholder='what are you looking for?' ref={inputRef} />
-                <button
-                    type='submit'
+                <Link
+                    to={`/search?extended=${extendedSearch}&filter=${filter}&query=${inputRef.current?.value}`}
                     onClick={async () => {
                         let res
                         let query = inputRef && inputRef.current ? inputRef.current.value : ''
@@ -50,7 +58,7 @@ export function SearchPage(props: SearchPageProps) {
                         setSearchResults(res)
                     }}>
                     →
-                </button>
+                </Link>
             </div>
             <div className='filters-wrapper'>
                 <div className='filters'>
@@ -58,10 +66,7 @@ export function SearchPage(props: SearchPageProps) {
                         <h3>Filters:</h3>
                         <button
                             title='collapse filter array'
-                            className={
-                                'collapse-filters-button ' +
-                                (filtersCollapsed ? 'collapsed' : 'nope')
-                            }
+                            className={'collapse-filters-button ' + (filtersCollapsed ? 'collapsed' : 'nope')}
                             onClick={() => setFiltersCollapsed(!filtersCollapsed)}>
                             {filtersCollapsed ? '↓' : '↑'}
                         </button>
@@ -121,11 +126,7 @@ export function SearchPage(props: SearchPageProps) {
                         {filter == 'songs' ? (
                             <>
                                 <label className='extended-search' htmlFor='extended-search'>
-                                    <input
-                                        type='checkbox'
-                                        id='extended-search'
-                                        onChange={(e) => setExtendedSearch(e.currentTarget.checked)}
-                                    />
+                                    <input type='checkbox' id='extended-search' onChange={(e) => setExtendedSearch(e.currentTarget.checked)} />
                                     <p>extended search {extendedSearch ? '✓' : '?'}</p>
                                 </label>
                             </>
@@ -138,7 +139,7 @@ export function SearchPage(props: SearchPageProps) {
             <div className='results'>
                 {searchResults?.items.map((e) => {
                     //console.log(e)
-                    if (e.type != 'channel') {
+                    if (isSearchResultStream(e)) {
                         return (
                             <div
                                 key={e.url}
@@ -147,9 +148,27 @@ export function SearchPage(props: SearchPageProps) {
                                 }}>
                                 <img src={e.thumbnail} alt='img' />
                                 <div className='infos' title={e.title + ' | ' + e.uploaderName}>
-                                    <p className='title'>
-                                        {props.truncateTitle(props.filterTitle(e.title))}
-                                    </p>
+                                    <p className='title'>{props.truncateTitle(props.filterTitle(e.title))}</p>
+                                    <p className='artist'>{e.uploaderName}</p>
+                                    <p className='id'>{e.url.split('=')[1]}</p>
+                                </div>
+                                <button className='like-button'>
+                                    <img src='./heart.svg' alt='like' />
+                                </button>
+                            </div>
+                        )
+                    } else if (isSearchResultPlaylist(e)) {
+                        return (
+                            <div
+                                key={e.url}
+                                onClick={() => {
+                                    console.log('!implement: add each item in the playlist to the queue in the right order!')
+
+                                    //props.setQueue([...props.queue, e.url.split('=')[1]])
+                                }}>
+                                <img src={e.thumbnail} alt='img' />
+                                <div className='infos' title={e.name + ' | ' + e.uploaderName}>
+                                    <p className='title'>{props.truncateTitle(props.filterTitle(e.name))}</p>
                                     <p className='artist'>{e.uploaderName}</p>
                                     <p className='id'>{e.url.split('=')[1]}</p>
                                 </div>
