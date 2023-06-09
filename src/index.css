@@ -12,6 +12,9 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     -webkit-text-size-adjust: 100%;
+
+    --accent-color: #473148;
+    --nav-link-icon-color: gray;
 }
 
 * {
@@ -33,9 +36,10 @@ body {
     margin: 0;
     min-width: 320px;
     min-height: 100vh;
-    background: radial-gradient(circle at top left, #252e3e80, #3d203df0),
-        radial-gradient(circle at bottom right, #535bf200, #2d3f5e80);
-    background-attachment: fixed;
+    /*background: radial-gradient(circle at top left, #252e3e80, #3d203df0), radial-gradient(circle at bottom right, #535bf200, #2d3f5e80);
+    background-attachment: fixed;*/
+    background-color: #ffe9e3;
+    color: var(--accent-color);
 }
 
 #root {

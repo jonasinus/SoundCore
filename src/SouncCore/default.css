@@ -1,0 +1,35 @@
+body {
+    border-radius: 1rem;
+}
+
+/*
+.player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+
+    --minimized-height: 6rem;
+    --maximized-height: 90vh;
+}
+
+.player.minimized > .minimized {
+    display: grid;
+    grid-template-columns: 1fr 4fr;
+    height: var(--minimized-height);
+    background-color: red;
+}
+
+.player.minimized > .minimized > .left > img {
+    object-fit: cover;
+    max-width: 100%;
+}
+
+.player[data-is-minimized='true'] > .maximized {
+    display: none;
+}
+
+.player[data-is-minimized='false'] > .minimized {
+    display: none;
+}
+*/

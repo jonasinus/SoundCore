@@ -1,126 +1,118 @@
-import './App.css'
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
-import { SearchPage } from './Routes/search'
-import PlaylistsPage from './Routes/playlists'
-import AccountPage from './Routes/account'
-import { ChartsPage } from './Routes/charts'
-import SoundCore from './Components/SoundCore'
-import { SongId } from './api/Client'
+import Nav from './Componenets/Nav'
+import SoundCore from './SouncCore'
+import Home from './Routes/[home]'
+import { Player } from './Componenets/Player'
+import { Regions } from './api/Client'
+import { useEffect } from 'react'
+import Channel from './Routes/[channel]'
+import Platlists from './Routes/[playlists]'
+import AccountPage from './Routes/[account]'
 
-export const API_URL = 'https://watchapi.whatever.social'
-export const API_2_URL = 'https://hyperpipeapi.onrender.com'
-
-export type FetchError = {
-    error: string
-    details: Promise<string>
+export interface PageProps {
+    soundCore: ReturnType<typeof SoundCore>
 }
 
-export const userConfig = {
-    dataSaver: false,
-    autoStart: true,
-    playOn: true,
-    resumeTracksIf: {
-        minTrackDuration: 60 * 10
-    }
+const USER_SETTINGS: UserSettings = {
+    region: 'US',
+    autoResume: true,
+    playerType: 'music'
 }
+
+export type UserSettings = { region: Regions; autoResume: boolean; playerType: 'video' | 'music' | 'adaptive' }
 
 export default function App() {
     const soundCore = SoundCore()
 
+    useEffect(() => {
+        if (USER_SETTINGS.autoResume) soundCore.resumeLastPlayed()
+
+        soundCore.initPlaylistEngine()
+        soundCore.getPlaylistHandler()?.loadAll()
+        console.log(soundCore.getPlaylistHandler())
+
+        soundCore.getPlaylistHandler()?.copyPublicPlaylist('PL4FB1JvhTLrGNSL4odYt72EqjDPJfjSdp')
+    }, [])
+
+    if (USER_SETTINGS.playerType === 'music')
+        return (
+            <>
+                <BrowserRouter>
+                    <Routes>
+                        <Route path='/charts' element={<Home soundCore={soundCore} userSettings={USER_SETTINGS} />} />
+                        <Route path='/dev' element={<Dev soundCore={soundCore} />} />
+                        <Route path='/search' element={<>searchpage</>} />
+                        <Route path='/channel' element={<Channel soundCore={soundCore} />} />
+                        <Route path='/playlists' element={<Platlists soundCore={soundCore} />} />
+                        <Route path='/account' element={<AccountPage soundCore={soundCore} />} />
+                    </Routes>
+                    <Player
+                        getCurrentSong={soundCore.getCurrentSong}
+                        getNextSong={soundCore.getNextSong}
+                        getPreviousSong={soundCore.getPrevSong}
+                        next={soundCore.nextSong}
+                        prev={soundCore.prevSong}
+                        filterTitle={soundCore.filterTitle}
+                        truncateTitle={soundCore.truncateTitle}
+                        playing={soundCore.playing}
+                        setPlaying={soundCore.setPlaying}
+                    />
+                    <Nav region={USER_SETTINGS.region} />
+                </BrowserRouter>
+            </>
+        )
+    else
+        return (
+            <>
+                <BrowserRouter>
+                    <h1>player not yet implemented</h1>
+                    <p>
+                        change the player type at{' '}
+                        <Link to={'/account#player-type'}>
+                            <b>
+                                <code>/account&gt;playertype</code>
+                            </b>
+                        </Link>
+                    </p>
+                    <Routes></Routes>
+                    <Nav region={USER_SETTINGS.region} />
+                </BrowserRouter>
+            </>
+        )
+}
+
+interface DevProps extends PageProps {}
+function Dev(props: DevProps) {
     return (
-        <BrowserRouter>
-            <TopBar soundCore={soundCore} />
-            {/*<button onClick={soundCore.playnextSong}>click me</button>*/}
-            <Routes>
-                <Route
-                    path='/search'
-                    element={
-                        <SearchPage
-                            queue={soundCore.queue}
-                            setQueue={soundCore.setQueue}
-                            fetchExtendedSearchResults={soundCore.fetchExtendedSearchResults}
-                            fetchSearchResults={soundCore.fetchSearchResults}
-                            filterTitle={soundCore.filterTitle}
-                            truncateTitle={soundCore.truncateTitle}
-                        />
-                    }></Route>
-                <Route
-                    path='/charts'
-                    element={
-                        <ChartsPage
-                            fetchCharts={soundCore.fetchCharts}
-                            rankThumbnails={soundCore.rankThumbnails}
-                            queue={soundCore.queue}
-                            setQueue={soundCore.setQueue}
-                            region={'US'}
-                        />
-                    }
-                />
-                <Route path='/playlists' element={<PlaylistsPage queue={soundCore.queue} setQueue={soundCore.setQueue} />} />
-                <Route path='/account' element={<AccountPage />} />
-            </Routes>
-            <soundCore.Player currentlyPlaying={soundCore.currentlyPlaying} next={() => {}} src={soundCore.src} />
-            <Nav />
-        </BrowserRouter>
-    )
-}
-
-interface TopBarProps {
-    soundCore: ReturnType<typeof SoundCore>
-}
-
-export function TopBar(props: TopBarProps) {
-    return <div className='top-bar'>{props.soundCore.isLoading ? 'loading player...' : ''}</div>
-}
-
-interface SongInListProps {
-    title: string
-    songId: string
-    artist: string
-    artistId: string
-    playlist: string
-    thumbnailUrl: string
-    liked: boolean
-    queue: SongId[]
-    setQueue: React.Dispatch<React.SetStateAction<SongId[]>>
-}
-export function SongInList(props: SongInListProps) {
-    return (
-        <div
-            className='song-in-list'
-            title={props.title + ' | ' + props.artist}
-            onClick={async () => {
-                props.setQueue([...props.queue, props.songId])
-            }}>
-            <img loading='lazy' src={props.thumbnailUrl} alt='' className='icon' />
-            <div className='infos'>
-                <p className='title'>{SoundCore().truncateTitle(SoundCore().filterTitle(props.title))}</p>
-                <p className='subtitle' onClick={() => console.log('goto artist[' + props.artistId + ']')}>
-                    {props.artist}
-                </p>
+        <div>
+            <h2>welcome to the soundcore dev environment</h2>
+            <p>as a security meassure, this site has NO access to databases etc, only to the piped / hyperpiped services!</p>
+            <br />
+            <br />
+            <div>
+                <p>prev: {props.soundCore.getPrevSong()?.title}</p>
+                <p>current: {props.soundCore.getCurrentSong()?.title}</p>
+                <p>next: {props.soundCore.getNextSong()?.title}</p>
+                <p>total: {props.soundCore.getQueue()?.length}</p>
+                <p>queueIndex: {props.soundCore.getQueueIndex()}</p>
             </div>
-            <button type='button' className='like-button'>
-                <img loading='lazy' src='./heart.svg' alt='fav' className={props.liked ? 'filled' : ''} />
+            <div>
+                <button onClick={() => props.soundCore.prevSong()}>back</button>
+                <button>play</button>
+                <button onClick={() => props.soundCore.nextSong()}>next</button>
+            </div>
+            <button
+                onClick={() => {
+                    props.soundCore.addToQueue('deDFAmOPYkQ')
+                }}>
+                add to queue!
             </button>
-        </div>
-    )
-}
-
-export function Nav() {
-    return (
-        <div className='nav'>
-            <Link to={'/charts'}>
-                <img src='./home.svg' alt='home' className='scale-down-light' />
-            </Link>
-            <Link to={'/search'}>
-                <img src='./search.svg' alt='search' className='scale-down' />
-            </Link>
-            <Link to={'/playlists'}>
-                <img src='./playlist.svg' alt='playllist' />
-            </Link>
-            <Link to={'/account'}>
-                <img src='./account.svg' alt='acc' />
-            </Link>
+            <button
+                onClick={() => {
+                    props.soundCore.removeFromQueue(0)
+                }}>
+                remove from queue!
+            </button>
         </div>
     )
 }
