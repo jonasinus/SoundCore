@@ -9,6 +9,9 @@ import Channel from './Routes/[channel]'
 import Platlists from './Routes/[playlists]'
 import AccountPage from './Routes/[account]'
 
+import './App.css'
+import Search from './Routes/[search]'
+
 export interface PageProps {
     soundCore: ReturnType<typeof SoundCore>
 }
@@ -41,7 +44,7 @@ export default function App() {
                     <Routes>
                         <Route path='/charts' element={<Home soundCore={soundCore} userSettings={USER_SETTINGS} />} />
                         <Route path='/dev' element={<Dev soundCore={soundCore} />} />
-                        <Route path='/search' element={<>searchpage</>} />
+                        <Route path='/search' element={<Search soundCore={soundCore} />} />
                         <Route path='/channel' element={<Channel soundCore={soundCore} />} />
                         <Route path='/playlists' element={<Platlists soundCore={soundCore} />} />
                         <Route path='/account' element={<AccountPage soundCore={soundCore} />} />

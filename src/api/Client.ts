@@ -59,6 +59,7 @@ export type ChartArtist = {
     id: string
     title: string
     thumbnails: Thumbnail[]
+    subscribers: string
 }
 
 export type Thumbnail = {
@@ -145,7 +146,7 @@ export type Chapter = {
     image: string
 }
 
-export type SearchTypes = 'songs' | 'albums' | 'artists' | 'playlists'
+export type SearchTypes = 'songs' | 'albums' | 'artists' | 'playlists' | 'all'
 
 export type Regions = 'US' | 'DE' | 'GB' | 'CA'
 

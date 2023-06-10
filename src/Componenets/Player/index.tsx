@@ -27,6 +27,7 @@ export function Player(props: PlayerProps) {
         if (props.getCurrentSong()) {
             setCurrent(props.getCurrentSong())
             setTitle(props.truncateTitle(props.filterTitle(props.getCurrentSong()?.title || '')))
+            audioElement.current?.load()
             audioElement.current?.play()
             setPlaying(true)
         }
@@ -34,7 +35,14 @@ export function Player(props: PlayerProps) {
 
     useEffect(() => {
         if (!playing) audioElement.current?.pause()
-        else audioElement.current?.play()
+        else
+            try {
+                audioElement.current?.play()
+            } catch (err) {
+                audioElement.current?.pause()
+                setPlaying(true)
+                console.error({ err })
+            }
     }, [playing])
 
     const handleLoadedMetadata = async () => {
@@ -82,6 +90,37 @@ export function Player(props: PlayerProps) {
         setTouchStartY(null)
     }
 
+    useEffect(() => {
+        const handleMediaSessionNext = () => {
+            console.log('mediasession: next')
+            props.next()
+        }
+
+        const handleMediaSessionPrev = () => {
+            console.log('mediasession: prev')
+            props.prev()
+        }
+
+        const handlePlayPause = () => {
+            setPlaying(!playing)
+        }
+
+        // Check if the mediaSession API is supported by the browser
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.setActionHandler('nexttrack', handleMediaSessionNext)
+            navigator.mediaSession.setActionHandler('previoustrack', handleMediaSessionPrev)
+            navigator.mediaSession.setActionHandler('play', handlePlayPause)
+            navigator.mediaSession.setActionHandler('pause', handlePlayPause)
+        }
+
+        return () => {
+            if ('mediaSession' in navigator) {
+                navigator.mediaSession.setActionHandler('nexttrack', null)
+                navigator.mediaSession.setActionHandler('previoustrack', null)
+            }
+        }
+    }, [])
+
     return (
         <div
             className={`player ${isMinimized ? 'minimized' : 'maximized'} ${current != null ? '' : 'no-'}track-loaded`}
@@ -95,6 +134,11 @@ export function Player(props: PlayerProps) {
                     src={current?.hqAudioSrc}
                     onPause={() => setPlaying(false)}
                     onPlay={() => setPlaying(true)}
+                    onCanPlay={() =>
+                        setTimeout(() => {
+                            setPlaying(true)
+                        }, 100)
+                    }
                     ref={audioElement}
                     onTimeUpdate={(ev) => handleProgress(ev)}
                     onLoadedMetadata={handleLoadedMetadata}
@@ -105,13 +149,15 @@ export function Player(props: PlayerProps) {
                     <img src={current?.thumbnailUrl} alt='img' />
                 </div>
                 <div className='info'>
-                    <p className='title'>{title}</p>
+                    <p className='title' title={props.filterTitle(current?.title || '')}>
+                        {title}
+                    </p>
                     <p className='artist'>{current?.uploader}</p>
                 </div>
                 <div className='right'>
                     <div className='ctrl'>
                         <button onClick={() => props.prev()}>lk</button>
-                        <button onClick={() => setPlaying(!playing)}>{playing ? '||' : '|>'}</button>
+                        <button onClick={() => setPlaying(!playing)}>{audioElement && playing ? '||' : '|>'}</button>
                     </div>
                 </div>
             </div>

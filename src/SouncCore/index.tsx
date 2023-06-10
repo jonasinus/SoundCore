@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { AudioStream, ChartResults, Playlist, PublicPlaylist, QueueElement, Regions, Stream, VideoStream } from '../api/Client'
+import { AudioStream, ChartResults, Playlist, PublicPlaylist, QueueElement, Regions, Stream, Thumbnail, VideoStream } from '../api/Client'
 
 import './default.css'
 
@@ -28,39 +28,9 @@ export default function SoundCore() {
         console.log('queueIndex changed: ', queueIndex)
     }, [queueIndex])
 
-    useEffect(() => {
-        const handleMediaSessionNext = () => {
-            console.log('mediasession: next')
-            nextSong()
-        }
-
-        const handleMediaSessionPrev = () => {
-            console.log('mediasession: prev')
-            prevSong()
-        }
-
-        const handlePlayPause = () => {
-            setPlaying(!playing)
-        }
-
-        // Check if the mediaSession API is supported by the browser
-        if ('mediaSession' in navigator) {
-            navigator.mediaSession.setActionHandler('nexttrack', handleMediaSessionNext)
-            navigator.mediaSession.setActionHandler('previoustrack', handleMediaSessionPrev)
-            navigator.mediaSession.setActionHandler('play', handlePlayPause)
-            navigator.mediaSession.setActionHandler('pause', handlePlayPause)
-        }
-
-        return () => {
-            if ('mediaSession' in navigator) {
-                navigator.mediaSession.setActionHandler('nexttrack', null)
-                navigator.mediaSession.setActionHandler('previoustrack', null)
-            }
-        }
-    }, [])
-
     async function initPlaylistEngine() {
         playlistHandler = PlaylistHandler({ playlists, setPlaylists, API_URL, API_2_URL, publicPlaylists, setPublicPlaylists })
+        console.log('playlist engine up and running!')
     }
 
     function getPlaylistHandler() {
@@ -245,7 +215,8 @@ export default function SoundCore() {
 
         if (ls) {
             let json = JSON.parse(ls)
-            addQueueElementToQueue(json)
+            let id = json.id
+            addToQueue(id)
         }
     }
 
@@ -254,9 +225,22 @@ export default function SoundCore() {
         if (isThereOne) return isThereOne
         else {
             let el = await fetchCharts(region)
+            el.charts.artists.forEach((a) => {
+                ;[a.title, a.subscribers] = a.title.split('•')
+                a.subscribers = a.subscribers.substring(0, a.subscribers.length - 12)
+            })
             setCharts([...charts, el])
             return el
         }
+    }
+
+    function rankThumbnails(thumbnails: Thumbnail[]): Thumbnail[] {
+        return thumbnails.sort((a, b) => {
+            const sizeA = a.width * a.height
+            const sizeB = b.width * b.height
+
+            return sizeB - sizeA
+        })
     }
 
     return {
@@ -285,7 +269,8 @@ export default function SoundCore() {
         playlists,
         publicPlaylists,
         playing,
-        setPlaying
+        setPlaying,
+        rankThumbnails
     }
 }
 
@@ -371,5 +356,37 @@ export function PlaylistHandler(props: PlaylistHandlerProps) {
         localStorage.setItem('playlist_public_' + playlist.title, JSON.stringify(playlist))
     }
 
-    return { loadAll, getPlaylist, createPlaylist, copyPublicPlaylist }
+    function removePLaylist(isPublic: boolean, id: string) {
+        console.log(`trying to remove ${isPublic ? 'public' : 'private'} playlist ${id} from ls: `, {})
+        let ls = { ...localStorage }
+        //let playlistIds = JSON.parse(localStorage.getItem('playlistIds') || '[]')
+        let publicPlaylists: PublicPlaylist[] = []
+        let privatePaylists: Playlist[] = []
+
+        if (isPublic) {
+            for (let key in Object.keys(ls)) {
+                let keyString = Object.keys(ls)[key]
+                console.log(keyString, JSON.parse(ls[keyString]))
+
+                if (keyString.startsWith('playlist_public_') && !keyString.endsWith(id)) {
+                    publicPlaylists.push(JSON.parse(ls[keyString]))
+                }
+            }
+            props.setPublicPlaylists(publicPlaylists)
+        } else {
+            for (let key in Object.keys(ls)) {
+                let keyString = Object.keys(ls)[key]
+                if (keyString.startsWith('playlist_private_') && !keyString.endsWith(id)) {
+                    publicPlaylists.push(JSON.parse(ls[keyString]))
+                }
+            }
+            props.setPlaylists(privatePaylists)
+        }
+    }
+
+    function l(b: boolean, s: string) {
+        console.log('l')
+    }
+
+    return { loadAll, getPlaylist, createPlaylist, copyPublicPlaylist, removePLaylist, l }
 }

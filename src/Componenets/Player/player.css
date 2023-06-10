@@ -19,6 +19,12 @@
     border-radius: 3rem 3rem 1rem 1rem;
 }
 
+.player > .alwaysThere > h2 {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 .player.minimized > .maximized {
     display: none;
 }
@@ -37,7 +43,6 @@
     grid-template-columns: 1fr 5fr 2fr;
     gap: 1rem;
     max-width: 100vw;
-    overflow: scroll;
     padding: 0 1rem 1rem 1rem;
 }
 
@@ -79,7 +84,7 @@
 
 .player.maximized {
     height: 90vh;
-    padding: 1rem;
+    padding: 0 1rem 1rem 1rem;
     display: flex;
     justify-content: left;
     align-items: center;
